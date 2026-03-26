@@ -5,7 +5,21 @@
 **a. Initial design**
 
 - Briefly describe your initial UML design.
+
+A system where a Scheduler takes owner constraints, pet information, and a set of care Tasks, then produces an optimized plan by respecting time availability and task priorities.
+
+
 - What classes did you include, and what responsibilities did you assign to each?
+
+Owner: Stores owner name, available daily time budget and manage owner preferneces/ constraints.
+
+Pet: Store pet info (name, species). Track pet-specific requirements
+
+Task: Store task details: name, duration (minutes), priority level, category (walk/feed/med). Support updating task attributes
+
+Scheduler: Accept owner, pet, and list of tasks as input. Implement scheduling algorithm (sort by priority, fit within time constraints). Generate a daily plan with task timing. Provide reasoning for placement decisions
+
+DailyPlan: Store scheduled tasks with assigned times. Track which tasks fit and which were deferred. Provide explanation of scheduling decisions
 
 **b. Design changes**
 
