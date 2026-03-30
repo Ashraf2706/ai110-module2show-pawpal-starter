@@ -41,3 +41,54 @@ pip install -r requirements.txt
 5. Add tests to verify key behaviors.
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
+
+
+## Smarter Scheduling
+Scheduling & task selection
+
+Greedy budget-aware scheduling with fit_within_constraints()
+
+Tasks ranked by a weighted task_score() combining:
+1. priority
+2. urgency/frequency
+3. duration
+
+Time-aware ordering
+
+sort_by_time() supports:
+- exact preferred_start_time in HH:MM
+- fallback to preferred_time_of_day buckets
+- tasks are scheduled in time order when possible
+
+Recurring task support
+
+- Task.mark_completed() now rolls over daily and weekly tasks
+- creates a next occurrence automatically with due_date advanced by 1 day or 1 week
+- expand_recurring_tasks() turns twice-a-day tasks into separate AM/PM instances
+
+Dependency and pet-aware ordering
+
+- order_tasks_with_dependencies() preserves simple task dependency relationships
+- Owner.find_pet_for_task() tracks which pet owns a task
+
+Conflict detection and warnings
+
+- DailyPlan.detect_conflicts() detects overlapping scheduled tasks
+- DailyPlan.conflict_warnings() returns lightweight human-readable warnings
+- scheduler does not crash on conflict; it reports issues instead
+
+Filtering helpers
+
+Owner-level task filters:
+1. get_tasks_by_pet()
+2. get_tasks_by_status()
+3. get_pending_tasks_by_pet()
+4. filter_tasks()
+
+Explanation and reasoning
+
+- Scheduler.provide_reasoning() now includes:
+
+1. plan summary
+2. conflict warnings
+3. deferred task list

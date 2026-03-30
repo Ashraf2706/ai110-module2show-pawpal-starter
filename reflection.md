@@ -43,8 +43,14 @@ Why: captures direct Pet-to-Task relationship.
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+
+The scheduler uses a greedy score-based selection instead of trying to compute a mathematically optimal task subset.
+
 - Why is that tradeoff reasonable for this scenario?
 
+pet care schedules usually have only a handful of tasks each day, so a fast heuristic is more practical than a complex optimizer.
+
+It keeps the system easier to understand and maintain, while still producing a good daily plan for an owner who needs quick, reliable recommendations rather than perfect optimization.
 ---
 
 ## 3. AI Collaboration

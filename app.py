@@ -1,5 +1,7 @@
 import streamlit as st
 
+from pawpal_system import Owner, Pet, Task, Scheduler, Priority, TaskCategory
+
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
 st.title("🐾 PawPal+")
@@ -43,11 +45,30 @@ owner_name = st.text_input("Owner name", value="Jordan")
 pet_name = st.text_input("Pet name", value="Mochi")
 species = st.selectbox("Species", ["dog", "cat", "other"])
 
-st.markdown("### Tasks")
-st.caption("Add a few tasks. In your final version, these should feed into your scheduler.")
+if "owner_vault" not in st.session_state:
+    st.session_state.owner_vault = {}
 
-if "tasks" not in st.session_state:
-    st.session_state.tasks = []
+if owner_name not in st.session_state.owner_vault:
+    st.session_state.owner_vault[owner_name] = Owner(name=owner_name)
+
+owner = st.session_state.owner_vault[owner_name]
+
+st.markdown("### Pets")
+st.caption("Add a pet to the current owner before adding tasks.")
+
+if st.button("Add pet"):
+    if owner.get_pet(pet_name) is None:
+        owner.add_pet(Pet(name=pet_name, species=species))
+        st.success(f"Added pet {pet_name}.")
+    else:
+        st.warning(f"Pet {pet_name} already exists.")
+
+pet_options = [pet.name for pet in owner.pets]
+selected_pet_name = st.selectbox("Select pet", pet_options or ["No pets yet"])
+selected_pet = owner.get_pet(selected_pet_name) if owner.pets else None
+
+st.markdown("### Tasks")
+st.caption("Add a few tasks and assign them to the selected pet.")
 
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -58,31 +79,50 @@ with col3:
     priority = st.selectbox("Priority", ["low", "medium", "high"], index=2)
 
 if st.button("Add task"):
-    st.session_state.tasks.append(
-        {"title": task_title, "duration_minutes": int(duration), "priority": priority}
-    )
+    if selected_pet is None:
+        st.error("Please add a pet first before adding tasks.")
+    else:
+        task = Task(
+            title=task_title,
+            duration_minutes=int(duration),
+            priority=Priority[priority.upper()],
+            category=TaskCategory.GENERAL,
+        )
+        selected_pet.add_task(task)
+        st.success(f"Added task '{task_title}' to {selected_pet.name}.")
 
-if st.session_state.tasks:
-    st.write("Current tasks:")
-    st.table(st.session_state.tasks)
+if owner.pets:
+    st.write("Current pet task list:")
+    for pet in owner.pets:
+        st.write(f"**{pet.name} ({pet.species})**")
+        if pet.tasks:
+            task_rows = [
+                {
+                    "title": t.title,
+                    "duration": t.duration_minutes,
+                    "priority": t.priority.value,
+                    "completed": t.completed,
+                }
+                for t in pet.tasks
+            ]
+            st.table(task_rows)
+        else:
+            st.write("No tasks yet for this pet.")
 else:
-    st.info("No tasks yet. Add one above.")
+    st.info("No pets found. Add a pet above.")
 
 st.divider()
 
 st.subheader("Build Schedule")
-st.caption("This button should call your scheduling logic once you implement it.")
+st.caption("Generate a daily schedule from the current owner's tasks.")
 
 if st.button("Generate schedule"):
-    st.warning(
-        "Not implemented yet. Next step: create your scheduling logic (classes/functions) and call it here."
-    )
-    st.markdown(
-        """
-Suggested approach:
-1. Design your UML (draft).
-2. Create class stubs (no logic).
-3. Implement scheduling behavior.
-4. Connect your scheduler here and display results.
-"""
-    )
+    if not owner.pets:
+        st.error("Add at least one pet with tasks before generating a schedule.")
+    else:
+        scheduler = Scheduler(owner)
+        if "daily_time_budget" not in owner.preferences:
+            owner.update_time_budget(120)
+        plan = scheduler.generate_daily_plan()
+        st.success("Schedule generated.")
+        st.text(scheduler.provide_reasoning(plan))

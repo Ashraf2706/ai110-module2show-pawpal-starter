@@ -13,38 +13,60 @@ def main():
     owner.add_pet(mochi)
     owner.add_pet(whiskers)
 
-    # Add tasks for pets
-    t1 = Task(
-        title="Morning walk",
-        duration_minutes=30,
-        priority=Priority.HIGH,
-        category=TaskCategory.WALK,
-        frequency="daily",
-    )
-    t2 = Task(
-        title="Feed kibble",
-        duration_minutes=10,
-        priority=Priority.MEDIUM,
-        category=TaskCategory.FEED,
-        frequency="twice-a-day",
-    )
-    t3 = Task(
-        title="Administer meds",
-        duration_minutes=15,
-        priority=Priority.HIGH,
-        category=TaskCategory.MEDS,
-        frequency="daily",
-    )
+    # Add tasks in a deliberately out-of-order way
+    tasks = [
+        Task(
+            title="Morning walk",
+            duration_minutes=30,
+            priority=Priority.HIGH,
+            category=TaskCategory.WALK,
+            frequency="daily",
+            preferred_start_time="08:00",
+        ),
+        Task(
+            title="Wake-up feeding",
+            duration_minutes=10,
+            priority=Priority.MEDIUM,
+            category=TaskCategory.FEED,
+            preferred_start_time="08:00",
+        ),
+        Task(
+            title="Administer meds",
+            duration_minutes=15,
+            priority=Priority.HIGH,
+            category=TaskCategory.MEDS,
+            frequency="daily",
+            preferred_start_time="09:30",
+        ),
+    ]
 
-    mochi.add_task(t1)
-    whiskers.add_task(t2)
-    mochi.add_task(t3)
+    mochi.add_task(tasks[0])
+    whiskers.add_task(tasks[1])
+    mochi.add_task(tasks[2])
 
-    # Run scheduler
     scheduler = Scheduler(owner)
-    plan = scheduler.generate_daily_plan(start_time=datetime.now().replace(hour=8, minute=0, second=0, microsecond=0))
 
-    print("Today's Schedule")
+    print("Raw task order after insertion:")
+    for pet in owner.pets:
+        print(f"- {pet.name} tasks:")
+        for task in pet.tasks:
+            print(f"  * {task.title} ({task.preferred_start_time or 'no time'})")
+
+    sorted_tasks = scheduler.sort_by_time(owner.pending_tasks())
+    print("\nTasks sorted by preferred start time:")
+    for task in sorted_tasks:
+        print(f"- {task.preferred_start_time or task.preferred_time_of_day}: {task.title}")
+
+    print("\nFiltered tasks for Mochi (pending):")
+    for task in owner.get_pending_tasks_by_pet("Mochi"):
+        print(f"- {task.title} ({task.preferred_start_time})")
+
+    print("\nFiltered completed tasks:")
+    for task in owner.get_tasks_by_status(completed=True):
+        print(f"- {task.title}")
+
+    plan = scheduler.generate_daily_plan(start_time=datetime.now().replace(hour=8, minute=0, second=0, microsecond=0))
+    print("\nToday's Schedule")
     print("================")
     print(scheduler.provide_reasoning(plan))
 
