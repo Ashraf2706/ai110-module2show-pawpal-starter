@@ -113,3 +113,33 @@ It covers the following tests:
 - conflict warnings are generated when tasks share the same start time
 
 My confidence level: 3/5 stars
+
+
+## Features
+- Greedy budget-aware task selection: fit_within_constraints() chooses pending tasks that fit the owner's daily time budget using a score-based greedy heuristic.
+
+- Weighted task scoring: task_score() combines priority, urgency, and duration to rank tasks.
+
+- Priority sorting: sort_by_priority() orders tasks from high to low priority.
+
+- Time-aware ordering: sort_by_time() respects exact preferred_start_time in HH:MM, then falls back to preferred_time_of_day buckets (morning, afternoon, evening).
+
+- Recurring task expansion: expand_recurring_tasks() converts twice-a-day tasks into separate AM/PM instances for scheduling.
+
+- Dependency-aware ordering: order_tasks_with_dependencies() preserves simple task dependency relationships while keeping heuristic order.
+
+- Daily plan construction: generate_daily_plan() schedules selected tasks with concrete start/end times and defers overflow tasks.
+
+- Conflict detection: DailyPlan.detect_conflicts() finds overlapping scheduled tasks.
+
+- Human-readable warnings: DailyPlan.conflict_warnings() and Scheduler.provide_reasoning() surface overlap warnings and reasoning for scheduling decisions.
+
+- Pet/owner task management: Owner, Pet, and Task classes support task assignment, filtering, completion, and recurring task creation.
+
+
+## Screenshot of demo
+Screenshot 1
+<a href="C:\Users\kawoo\OneDrive\Pictures\Screenshots\pawpal_1.png" target="_blank"><img src='C:\Users\kawoo\OneDrive\Pictures\Screenshots\pawpal_1.png' title='PawPal App 1' width='' alt='PawPal App 1' class='center-block' /></a>
+
+Screenshot 2
+<a href="C:\Users\kawoo\OneDrive\Pictures\Screenshots\pawpal_2.png" target="_blank"><img src='C:\Users\kawoo\OneDrive\Pictures\Screenshots\pawpal_2.png' title='PawPal App 2' width='' alt='PawPal App 2' class='center-block' /></a>

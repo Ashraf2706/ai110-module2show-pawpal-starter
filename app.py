@@ -52,6 +52,7 @@ if owner_name not in st.session_state.owner_vault:
     st.session_state.owner_vault[owner_name] = Owner(name=owner_name)
 
 owner = st.session_state.owner_vault[owner_name]
+scheduler = Scheduler(owner)
 
 st.markdown("### Pets")
 st.caption("Add a pet to the current owner before adding tasks.")
@@ -95,19 +96,51 @@ if owner.pets:
     st.write("Current pet task list:")
     for pet in owner.pets:
         st.write(f"**{pet.name} ({pet.species})**")
-        if pet.tasks:
+        tasks = pet.tasks
+
+        sorted_tasks = None
+        if hasattr(scheduler, "sort_tasks"):
+            sorted_tasks = scheduler.sort_tasks(tasks)
+        elif hasattr(scheduler, "get_sorted_tasks"):
+            sorted_tasks = scheduler.get_sorted_tasks(tasks)
+        if sorted_tasks is not None and sorted_tasks != tasks:
+            tasks = sorted_tasks
+            st.success(f"Tasks for {pet.name} sorted by scheduler rules.")
+
+        filtered_tasks = None
+        if hasattr(scheduler, "filter_tasks"):
+            filtered_tasks = scheduler.filter_tasks(tasks)
+        if filtered_tasks is not None and filtered_tasks != tasks:
+            tasks = filtered_tasks
+            st.success(f"Tasks for {pet.name} filtered by scheduler rules.")
+
+        conflicts = []
+        if hasattr(scheduler, "find_conflicts"):
+            conflicts = scheduler.find_conflicts(tasks)
+        elif hasattr(scheduler, "detect_conflicts"):
+            conflicts = scheduler.detect_conflicts(tasks)
+        if conflicts:
+            st.warning(
+                f"Task conflicts detected for {pet.name}: "
+                + ", ".join(
+                    [c.title if hasattr(c, "title") else str(c) for c in conflicts]
+                )
+            )
+
+        if tasks:
             task_rows = [
                 {
+                    "No.": idx,
                     "title": t.title,
                     "duration": t.duration_minutes,
                     "priority": t.priority.value,
                     "completed": t.completed,
                 }
-                for t in pet.tasks
+                for idx, t in enumerate(tasks, start=1)
             ]
             st.table(task_rows)
         else:
-            st.write("No tasks yet for this pet.")
+            st.info("No tasks yet for this pet.")
 else:
     st.info("No pets found. Add a pet above.")
 
