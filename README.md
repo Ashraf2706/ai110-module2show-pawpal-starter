@@ -92,3 +92,24 @@ Explanation and reasoning
 1. plan summary
 2. conflict warnings
 3. deferred task list
+
+
+## Testing PawPal+
+To run tests: 
+```bash
+python -m pytest
+```
+
+It covers the following tests:
+- task completion toggles completed
+- adding a task to a pet increases its task list
+- scheduler selects tasks that fit a time budget
+- daily plan separates scheduled vs deferred tasks
+- completing a daily recurring task creates the next day’s occurrence
+- owner filters work by pet and completion status
+- sorting respects exact HH:MM preferences and morning/afternoon/evening buckets
+- twice-a-day tasks expand into AM/PM instances
+- DailyPlan detects overlapping scheduled tasks
+- conflict warnings are generated when tasks share the same start time
+
+My confidence level: 3/5 stars

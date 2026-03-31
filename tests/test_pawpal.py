@@ -122,6 +122,33 @@ def test_complete_daily_task_creates_next_occurrence():
     assert len(owner.all_tasks()) == 2
 
 
+def test_complete_daily_task_creates_next_occurrence_for_next_day():
+    owner = Owner(name="Alex")
+    pet = Pet(name="Buddy", species="dog")
+    owner.add_pet(pet)
+
+    task = Task(
+        title="Morning walk",
+        duration_minutes=30,
+        priority=Priority.HIGH,
+        category=TaskCategory.WALK,
+        frequency="daily",
+        preferred_start_time="08:00",
+        due_date=datetime(2026, 1, 1, 8, 0),
+    )
+    pet.add_task(task)
+
+    scheduler = Scheduler(owner)
+    next_task = scheduler.complete_task(task)
+
+    assert task.completed is True
+    assert next_task is not None
+    assert next_task.title == "Morning walk"
+    assert next_task.due_date == datetime(2026, 1, 2, 8, 0)
+    assert next_task.completed is False
+    assert len(owner.all_tasks()) == 2
+
+
 def test_owner_filters_tasks_by_pet_and_status():
     owner = Owner(name="Alex")
     pet1 = Pet(name="Buddy", species="dog")
@@ -185,6 +212,50 @@ def test_sort_by_time_uses_hh_mm_string():
     sorted_tasks = scheduler.sort_by_time(scheduler.retrieve_pending_tasks())
 
     assert [task.title for task in sorted_tasks] == ["Early", "Mid", "Late"]
+
+
+def test_sort_by_time_uses_preferred_time_and_buckets():
+    owner = Owner(name="Alex")
+    pet = Pet(name="Buddy", species="dog")
+    owner.add_pet(pet)
+
+    pet.add_task(Task(
+        title="Evening play",
+        duration_minutes=15,
+        priority=Priority.MEDIUM,
+        category=TaskCategory.GENERAL,
+        preferred_time_of_day="evening",
+    ))
+    pet.add_task(Task(
+        title="Morning feed",
+        duration_minutes=10,
+        priority=Priority.MEDIUM,
+        category=TaskCategory.FEED,
+        preferred_time_of_day="morning",
+    ))
+    pet.add_task(Task(
+        title="Afternoon grooming",
+        duration_minutes=20,
+        priority=Priority.MEDIUM,
+        category=TaskCategory.GENERAL,
+        preferred_time_of_day="afternoon",
+    ))
+    pet.add_task(Task(
+        title="No preference task",
+        duration_minutes=5,
+        priority=Priority.LOW,
+        category=TaskCategory.GENERAL,
+    ))
+
+    scheduler = Scheduler(owner)
+    sorted_tasks = scheduler.sort_by_time(scheduler.retrieve_pending_tasks())
+
+    assert [task.title for task in sorted_tasks] == [
+        "Morning feed",
+        "Afternoon grooming",
+        "Evening play",
+        "No preference task",
+    ]
 
 
 def test_recurring_tasks_expand_for_twice_a_day():
@@ -272,3 +343,5 @@ def test_scheduler_warns_when_tasks_share_start_time():
     warnings = plan.conflict_warnings()
     assert len(warnings) == 1
     assert "overlaps with" in warnings[0]
+    assert "Walk" in warnings[0]
+    assert "Feed" in warnings[0]
